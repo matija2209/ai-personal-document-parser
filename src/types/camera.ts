@@ -9,6 +9,16 @@ export interface CapturedImage {
   preview: string;
   timestamp: number;
   quality: QualityMetrics;
+  uploadResult?: {
+    success: boolean;
+    fileUrl?: string;
+    fileKey?: string;
+    filePath?: string;
+    originalFileName?: string;
+    compressedSize?: number;
+    originalSize?: number;
+    error?: string;
+  };
 }
 
 export interface QualityMetrics {

@@ -40,7 +40,11 @@ export default function CameraPage() {
       console.log('Document created with ID:', documentId);
       console.log('Image captured:', image);
       
-      alert(`Image captured successfully! Document ID: ${documentId}\nFile size: ${(image.file.size / 1024).toFixed(1)}KB\nQuality score: ${image.quality.blurScore.toFixed(1)}\n\nFile upload integration will be added in Phase 5.`);
+      if (image.uploadResult?.success) {
+        alert(`Image uploaded successfully!\nDocument ID: ${documentId}\nFile URL: ${image.uploadResult.fileUrl}\nCompression: ${image.uploadResult.originalSize} → ${image.uploadResult.compressedSize} bytes`);
+      } else {
+        alert(`Upload failed: ${image.uploadResult?.error || 'Unknown error'}`);
+      }
       
       router.push('/dashboard');
     } catch (error) {
@@ -61,9 +65,19 @@ export default function CameraPage() {
       console.log('Front image:', front);
       if (back) console.log('Back image:', back);
       
-      const message = back 
-        ? `Document captured successfully!\nDocument ID: ${documentId}\nFront: ${(front.file.size / 1024).toFixed(1)}KB\nBack: ${(back.file.size / 1024).toFixed(1)}KB\n\nFile upload integration will be added in Phase 5.`
-        : `Document captured successfully!\nDocument ID: ${documentId}\nFront only: ${(front.file.size / 1024).toFixed(1)}KB\n\nFile upload integration will be added in Phase 5.`;
+      let message = `Document uploaded!\nDocument ID: ${documentId}\n`;
+      
+      if (front.uploadResult?.success) {
+        message += `Front: ${front.uploadResult.fileUrl}\n`;
+      }
+      
+      if (back?.uploadResult?.success) {
+        message += `Back: ${back.uploadResult.fileUrl}\n`;
+      }
+      
+      if (!front.uploadResult?.success || (back && !back.uploadResult?.success)) {
+        message += 'Some uploads failed. Check console for details.';
+      }
       
       alert(message);
       router.push('/dashboard');

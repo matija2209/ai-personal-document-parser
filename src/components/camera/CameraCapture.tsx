@@ -9,13 +9,15 @@ import { CameraFallback } from './CameraFallback';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { ErrorMessage } from '@/components/ui/ErrorMessage';
 import { getCameraCapabilities } from '@/lib/camera/cameraUtils';
+import { useFileUpload } from '@/hooks/useFileUpload';
+import { UploadStatus } from '@/components/upload/UploadStatus';
 
 interface CameraCaptureProps {
   onImageConfirmed?: (image: CapturedImage) => void;
   documentType?: string;
 }
 
-type CaptureStep = 'capture' | 'review' | 'processing';
+type CaptureStep = 'capture' | 'review' | 'processing' | 'uploading';
 
 export const CameraCapture: React.FC<CameraCaptureProps> = ({ 
   onImageConfirmed,
@@ -25,6 +27,7 @@ export const CameraCapture: React.FC<CameraCaptureProps> = ({
   const [capturedImage, setCapturedImage] = useState<CapturedImage | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [useFallback, setUseFallback] = useState(!getCameraCapabilities());
+  const { uploadState, uploadFile, resetUpload } = useFileUpload();
 
   const handleCapture = async (image: CapturedImage) => {
     try {
@@ -58,12 +61,24 @@ export const CameraCapture: React.FC<CameraCaptureProps> = ({
   const handleConfirm = async () => {
     if (capturedImage) {
       try {
-        setCurrentStep('processing');
-        if (onImageConfirmed) {
-          await onImageConfirmed(capturedImage);
+        setCurrentStep('uploading');
+        resetUpload();
+        
+        const uploadResult = await uploadFile(capturedImage.file, documentType);
+        
+        if (uploadResult.success) {
+          if (onImageConfirmed) {
+            await onImageConfirmed({
+              ...capturedImage,
+              uploadResult
+            });
+          }
+        } else {
+          setError(uploadResult.error || 'Upload failed');
+          setCurrentStep('review');
         }
       } catch (error) {
-        setError('Failed to confirm image');
+        setError('Failed to upload image');
         setCurrentStep('review');
       }
     }
@@ -119,6 +134,13 @@ export const CameraCapture: React.FC<CameraCaptureProps> = ({
 
       {currentStep === 'processing' && (
         <ProcessingStep />
+      )}
+
+      {currentStep === 'uploading' && (
+        <UploadingStep 
+          uploadState={uploadState}
+          fileName={capturedImage?.file.name}
+        />
       )}
     </div>
   );
@@ -204,6 +226,30 @@ const ProcessingStep: React.FC = () => {
       <p className="text-gray-600">
         Please wait while we prepare your image.
       </p>
+    </div>
+  );
+};
+
+const UploadingStep: React.FC<{
+  uploadState: any;
+  fileName?: string;
+}> = ({ uploadState, fileName }) => {
+  return (
+    <div className="uploading-step py-6">
+      <div className="text-center mb-6">
+        <h2 className="text-lg font-medium text-gray-900 mb-2">
+          Uploading your document
+        </h2>
+        <p className="text-gray-600">
+          Your image is being uploaded and processed...
+        </p>
+      </div>
+      
+      <UploadStatus 
+        uploadState={uploadState} 
+        fileName={fileName}
+        className="mb-4"
+      />
     </div>
   );
 };

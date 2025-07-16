@@ -48,21 +48,22 @@ model Document {
 }
 
 model DocumentFile {
-  id               String   @id @default(cuid())
-  documentId       String
+  id               String    @id @default(cuid())
+  documentId       String?
   userId           String
-  fileKey          String   @unique
+  fileKey          String    @unique
   filePath         String
-  fileType         String   // "front", "back"
+  fileType         String?   // "front", "back"
   originalFileName String
   compressedSize   Int
   originalSize     Int
   mimeType         String
-  uploadedAt       DateTime @default(now())
+  uploadedAt       DateTime  @default(now())
+  createdAt        DateTime  @default(now())
   
   // Relations
-  document         Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
-  user             User     @relation(fields: [userId], references: [clerkId], onDelete: Cascade)
+  document         Document? @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  user             User      @relation(fields: [userId], references: [clerkId], onDelete: Cascade)
   
   @@index([documentId])
   @@index([userId])

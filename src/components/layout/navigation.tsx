@@ -1,3 +1,4 @@
+import { UserButton, SignInButton, SignedIn, SignedOut } from '@clerk/nextjs'
 import Link from 'next/link';
 
 export function Navigation() {
@@ -12,30 +13,35 @@ export function Navigation() {
           </div>
           
           <div className="flex items-center space-x-4">
-            <Link 
-              href="/dashboard" 
-              className="text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
-            >
-              Dashboard
-            </Link>
-            <Link 
-              href="/camera" 
-              className="text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
-            >
-              Camera
-            </Link>
-            <Link 
-              href="/settings" 
-              className="text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
-            >
-              Settings
-            </Link>
-            <Link 
-              href="/sign-in" 
-              className="bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-blue-700"
-            >
-              Sign In
-            </Link>
+            <SignedIn>
+              <Link 
+                href="/dashboard" 
+                className="text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
+              >
+                Dashboard
+              </Link>
+              <Link 
+                href="/camera" 
+                className="text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
+              >
+                Camera
+              </Link>
+              <Link 
+                href="/settings" 
+                className="text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
+              >
+                Settings
+              </Link>
+              <UserButton afterSignOutUrl="/" />
+            </SignedIn>
+            
+            <SignedOut>
+              <SignInButton>
+                <button className="bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-blue-700">
+                  Sign In
+                </button>
+              </SignInButton>
+            </SignedOut>
           </div>
         </div>
       </div>

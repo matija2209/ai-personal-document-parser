@@ -106,7 +106,7 @@ export default function CameraPage() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="container mx-auto px-4 py-4 sm:py-8">
       <div className="max-w-md mx-auto mb-6">
         <div className="flex space-x-2">
           <button

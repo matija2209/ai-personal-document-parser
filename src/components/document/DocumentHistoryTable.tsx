@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
+import { toast } from 'sonner';
 
 interface Document {
   id: string;
@@ -90,9 +91,10 @@ export function DocumentHistoryTable({ initialDocuments }: DocumentHistoryTableP
 
       // Remove from local state
       setDocuments(prev => prev.filter(doc => doc.id !== documentId));
+      toast.success('Document deleted successfully');
     } catch (error) {
       console.error('Error deleting document:', error);
-      alert('Failed to delete document. Please try again.');
+      toast.error('Failed to delete document. Please try again.');
     } finally {
       setDeletingId(null);
     }

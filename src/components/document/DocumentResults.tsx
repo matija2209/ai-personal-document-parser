@@ -12,6 +12,7 @@ import { Separator } from '@/components/ui/separator';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { DocumentStatus } from './DocumentStatus';
 import { ImagePreview } from './ImagePreview';
+import { toast } from 'sonner';
 
 interface DocumentResultsProps {
   document: {
@@ -77,9 +78,10 @@ export function DocumentResults({ document, extraction, hasErrors }: DocumentRes
 
       setIsEditing(false);
       router.refresh();
+      toast.success('Changes saved successfully!');
     } catch (error) {
       console.error('Error saving changes:', error);
-      alert('Failed to save changes. Please try again.');
+      toast.error('Failed to save changes. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -102,9 +104,10 @@ export function DocumentResults({ document, extraction, hasErrors }: DocumentRes
 
       router.push('/dashboard');
       router.refresh();
+      toast.success('Document deleted successfully');
     } catch (error) {
       console.error('Error deleting document:', error);
-      alert('Failed to delete document. Please try again.');
+      toast.error('Failed to delete document. Please try again.');
     } finally {
       setIsDeleting(false);
     }
@@ -131,6 +134,7 @@ export function DocumentResults({ document, extraction, hasErrors }: DocumentRes
     a.click();
     window.document.body.removeChild(a);
     URL.revokeObjectURL(url);
+    toast.success('Data exported successfully!');
   };
 
   const handleFieldChange = (field: string, value: string) => {
@@ -155,9 +159,9 @@ export function DocumentResults({ document, extraction, hasErrors }: DocumentRes
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex justify-between items-start">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
             {document.documentType.replace(/[_-]/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
           </h1>
           <p className="text-gray-600 mt-1">
@@ -165,14 +169,14 @@ export function DocumentResults({ document, extraction, hasErrors }: DocumentRes
           </p>
         </div>
         
-        <div className="flex space-x-2">
-          <Button onClick={handleExport} variant="outline">
+        <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+          <Button onClick={handleExport} variant="outline" className="w-full sm:w-auto">
             Export JSON
           </Button>
           
           <AlertDialog>
             <AlertDialogTrigger asChild>
-              <Button variant="destructive" disabled={isDeleting}>
+              <Button variant="destructive" disabled={isDeleting} className="w-full sm:w-auto">
                 {isDeleting ? <LoadingSpinner size="sm" /> : 'Delete'}
               </Button>
             </AlertDialogTrigger>
@@ -235,25 +239,27 @@ export function DocumentResults({ document, extraction, hasErrors }: DocumentRes
               </CardDescription>
             </div>
             
-            <div className="flex space-x-2">
+            <div className="flex flex-col sm:flex-row gap-2">
               {isEditing ? (
                 <>
                   <Button 
                     onClick={handleCancel} 
                     variant="outline" 
                     disabled={isLoading}
+                    className="w-full sm:w-auto"
                   >
                     Cancel
                   </Button>
                   <Button 
                     onClick={handleSave} 
                     disabled={isLoading}
+                    className="w-full sm:w-auto"
                   >
                     {isLoading ? <LoadingSpinner size="sm" /> : 'Save Changes'}
                   </Button>
                 </>
               ) : (
-                <Button onClick={handleEditToggle}>
+                <Button onClick={handleEditToggle} className="w-full sm:w-auto">
                   Edit
                 </Button>
               )}

@@ -30,9 +30,10 @@ export function ImagePreview({ fileKey, fileName, fileType }: ImagePreviewProps)
             src={imageUrl}
             alt={fileName}
             className="w-full h-48 object-cover"
+            loading="lazy"
             onError={(e) => {
               const target = e.target as HTMLImageElement;
-              target.src = '/placeholder-image.png'; // You might want to add a placeholder
+              target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjNmNGY2Ii8+CiAgPHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzZiNzI4MCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkltYWdlIHVuYXZhaWxhYmxlPC90ZXh0Pgo8L3N2Zz4K';
               target.alt = 'Image failed to load';
             }}
           />

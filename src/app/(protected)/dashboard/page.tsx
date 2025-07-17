@@ -61,11 +61,11 @@ export default async function Dashboard({ searchParams }: DashboardProps) {
   };
 
   return (
-    <div className="container mx-auto px-4 py-8 space-y-6">
+    <div className="container mx-auto px-4 py-4 sm:py-8 space-y-4 sm:space-y-6">
       {/* Header */}
-      <div className="flex justify-between items-start">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
             Welcome back, {user?.name || 'User'}!
           </h1>
           <p className="text-gray-600 mt-1">
@@ -73,7 +73,7 @@ export default async function Dashboard({ searchParams }: DashboardProps) {
           </p>
         </div>
         
-        <Button asChild>
+        <Button asChild className="w-full sm:w-auto">
           <Link href="/camera">
             Scan New Document
           </Link>
@@ -81,7 +81,7 @@ export default async function Dashboard({ searchParams }: DashboardProps) {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <Card>
           <CardHeader className="pb-2">
             <CardDescription>Total Documents</CardDescription>

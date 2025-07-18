@@ -3,7 +3,7 @@
 import { useState, useCallback } from 'react';
 import { UploadState, UploadResult, UploadProgress } from '@/types/upload';
 import { compressImageFile, validateImageFile } from '@/lib/image-compression';
-import { retryWithBackoff, isRetryableError, UploadError } from '@/lib/upload-retry';
+import { retryWithBackoff, isRetryableError, isRetryableStatus, UploadError } from '@/lib/upload-retry';
 
 export function useFileUpload() {
   const [uploadState, setUploadState] = useState<UploadState>({
@@ -36,69 +36,32 @@ export function useFileUpload() {
       // Compress image
       const { compressedFile, originalSize, compressedSize } = await compressImageFile(file);
       
-      // Get presigned URL with retry
-      const { presignedUrl, fileKey, filePath } = await retryWithBackoff(async () => {
-        const presignedResponse = await fetch('/api/upload/presigned-url', {
+      // Upload directly to server with retry
+      const uploadResult = await retryWithBackoff(async () => {
+        const formData = new FormData();
+        formData.append('file', compressedFile);
+        formData.append('documentType', documentType);
+        if (documentId) formData.append('documentId', documentId);
+
+        const uploadResponse = await fetch('/api/upload/direct', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            fileName: file.name,
-            fileType: compressedFile.type,
-            fileSize: compressedFile.size,
-            documentType,
-          }),
+          body: formData,
         });
         
-        if (!presignedResponse.ok) {
-          const errorData = await presignedResponse.json();
-          const isRetryable = presignedResponse.status >= 500 || presignedResponse.status === 429;
+        if (!uploadResponse.ok) {
+          const errorData = await uploadResponse.json();
+          const isRetryable = uploadResponse.status >= 500 || uploadResponse.status === 429;
           throw new UploadError(
-            errorData.error || 'Failed to get upload URL',
+            errorData.error || 'Failed to upload file',
             isRetryable,
-            presignedResponse.status
+            uploadResponse.status
           );
         }
         
-        return presignedResponse.json();
+        return uploadResponse.json();
       });
-      
-      // Upload to R2 with progress tracking and retry
-      await retryWithBackoff(async () => {
-        await uploadToR2(compressedFile, presignedUrl, (progress) => {
-          setUploadState(prev => ({
-            ...prev,
-            progress,
-          }));
-        });
-      });
-      
-      // Complete upload with retry
-      const { fileUrl, compressionRatio } = await retryWithBackoff(async () => {
-        const completeResponse = await fetch('/api/upload/complete', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            fileKey,
-            originalFileName: file.name,
-            compressedSize,
-            originalSize,
-            documentType,
-            documentId,
-          }),
-        });
-        
-        if (!completeResponse.ok) {
-          const errorData = await completeResponse.json();
-          const isRetryable = completeResponse.status >= 500 || completeResponse.status === 429;
-          throw new UploadError(
-            errorData.error || 'Failed to complete upload',
-            isRetryable,
-            completeResponse.status
-          );
-        }
-        
-        return completeResponse.json();
-      });
+
+      const { fileUrl, fileKey, filePath } = uploadResult;
       
       const result: UploadResult = {
         success: true,
@@ -185,20 +148,78 @@ async function uploadToR2(
       if (xhr.status === 200) {
         resolve();
       } else {
-        reject(new Error(`Upload failed with status: ${xhr.status}`));
+        const errorMessage = getUploadErrorMessage(xhr.status, xhr.responseText);
+        console.error('Upload failed:', {
+          status: xhr.status,
+          statusText: xhr.statusText,
+          responseText: xhr.responseText,
+          presignedUrl: presignedUrl.split('?')[0] // Log URL without query params
+        });
+        reject(new UploadError(errorMessage, isRetryableStatus(xhr.status), xhr.status));
       }
     });
     
     xhr.addEventListener('error', () => {
-      reject(new Error('Upload failed'));
+      // Check if this is a CORS error (status 0 usually indicates CORS block)
+      if (xhr.status === 0) {
+        console.error('CORS error detected during upload:', {
+          readyState: xhr.readyState,
+          status: xhr.status,
+          presignedUrl: presignedUrl.split('?')[0]
+        });
+        reject(new UploadError(
+          'Upload blocked by CORS policy. Please check your R2 bucket CORS configuration.',
+          false, // Don't retry CORS errors
+          0
+        ));
+      } else {
+        console.error('Network error during upload:', {
+          status: xhr.status,
+          readyState: xhr.readyState
+        });
+        reject(new UploadError('Network error during upload. Please check your connection.', true, xhr.status));
+      }
     });
     
     xhr.addEventListener('abort', () => {
-      reject(new Error('Upload aborted'));
+      reject(new UploadError('Upload was cancelled', false, 0));
+    });
+    
+    xhr.addEventListener('timeout', () => {
+      reject(new UploadError('Upload timed out. Please try again.', true, 0));
     });
     
     xhr.open('PUT', presignedUrl);
     xhr.setRequestHeader('Content-Type', file.type);
+    xhr.timeout = 300000; // 5 minutes timeout
     xhr.send(file);
   });
+}
+
+function getUploadErrorMessage(status: number, responseText: string): string {
+  switch (status) {
+    case 400:
+      return 'Invalid file or request. Please check the file format and try again.';
+    case 403:
+      return 'Access denied. The upload link may have expired.';
+    case 404:
+      return 'Upload destination not found. Please try again.';
+    case 413:
+      return 'File too large. Please reduce the file size and try again.';
+    case 429:
+      return 'Too many requests. Please wait a moment and try again.';
+    case 500:
+    case 502:
+    case 503:
+    case 504:
+      return 'Server error. Please try again in a moment.';
+    default:
+      // Try to parse error from response
+      try {
+        const errorData = JSON.parse(responseText);
+        return errorData.message || errorData.error || `Upload failed with status ${status}`;
+      } catch {
+        return `Upload failed with status ${status}. Please try again.`;
+      }
+  }
 }

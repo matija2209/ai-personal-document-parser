@@ -16,6 +16,16 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Document type is required' }, { status: 400 });
     }
 
+    // Ensure user exists in database
+    await prisma.user.upsert({
+      where: { clerkId: userId },
+      update: {},
+      create: {
+        clerkId: userId,
+        email: '', // Will be updated when we have user info
+      },
+    });
+
     const document = await prisma.document.create({
       data: {
         userId,

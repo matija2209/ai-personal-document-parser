@@ -16,9 +16,9 @@ Implement secure file upload pipeline from frontend to Cloudflare R2 storage usi
 
 ### 1.1 Install Required Packages
 ```bash
-npm install @aws-sdk/client-s3 @aws-sdk/s3-request-presigner
-npm install browser-image-compression
-npm install @types/node
+pmpm add @aws-sdk/client-s3 @aws-sdk/s3-request-presigner
+pmpm add browser-image-compression
+pmpm add @types/node
 ```
 
 ### 1.2 Environment Variables Setup

@@ -43,6 +43,10 @@ export async function retryWithBackoff<T>(
 }
 
 export function isRetryableError(error: unknown): boolean {
+  if (error instanceof UploadError) {
+    return error.isRetryable;
+  }
+  
   if (!(error instanceof Error)) return false;
   
   const message = error.message.toLowerCase();
@@ -58,6 +62,11 @@ export function isRetryableError(error: unknown): boolean {
   ];
   
   return retryableMessages.some(msg => message.includes(msg));
+}
+
+export function isRetryableStatus(status: number): boolean {
+  // Server errors (5xx) and rate limiting (429) are retryable
+  return status >= 500 || status === 429;
 }
 
 export class UploadError extends Error {

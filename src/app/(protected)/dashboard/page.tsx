@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { DocumentHistoryTable } from '@/components/document/DocumentHistoryTable';
+import type { Document } from '@/lib/types';
 
 interface DashboardProps {
   searchParams: Promise<{ search?: string; type?: string }>;
@@ -55,9 +56,9 @@ export default async function Dashboard({ searchParams }: DashboardProps) {
 
   const stats = {
     total: documents.length,
-    completed: documents.filter(d => d.status === 'completed').length,
-    processing: documents.filter(d => d.status === 'processing').length,
-    failed: documents.filter(d => d.status === 'failed').length,
+    completed: documents.filter((d: Document) => d.status === 'completed').length,
+    processing: documents.filter((d: Document) => d.status === 'processing').length,
+    failed: documents.filter((d: Document) => d.status === 'failed').length,
   };
 
   return (

@@ -46,10 +46,12 @@ export async function processDocument(
     // Get the primary image file (front or first available)
     const primaryFile = document.files.find((file: any) => file.fileType === 'front') || document.files[0];
     
-    // Construct image URL
+    // Construct image URL with proper encoding
+    const encodedFileKey = encodeURIComponent(primaryFile.fileKey);
     const imageUrl = R2_CONFIG.publicUrl 
-      ? `${R2_CONFIG.publicUrl}/${primaryFile.fileKey}`
-      : `https://${process.env.R2_ACCOUNT_ID}.r2.cloudflarestorage.com/${R2_CONFIG.bucketName}/${primaryFile.fileKey}`;
+      ? `${R2_CONFIG.publicUrl}/${encodedFileKey}`
+      : `https://${process.env.R2_ACCOUNT_ID}.r2.cloudflarestorage.com/${R2_CONFIG.bucketName}/${encodedFileKey}`;
+
 
     // Determine document type (map from database to AI types)
     const documentType: DocumentType = mapDocumentType(document.documentType);

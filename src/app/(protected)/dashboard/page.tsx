@@ -4,7 +4,9 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { DocumentHistoryTable } from '@/components/document/DocumentHistoryTable';
-import type { Document } from '@/lib/types';
+
+// Force dynamic rendering to avoid caching stale document statuses
+export const dynamic = 'force-dynamic';
 
 interface DashboardProps {
   searchParams: Promise<{ search?: string; type?: string }>;
@@ -45,6 +47,7 @@ export default async function Dashboard({ searchParams }: DashboardProps) {
   const documents = await prisma.document.findMany({
     where: whereClause,
     include: {
+      files: true,
       extractions: {
         select: { confidenceScore: true },
         orderBy: { createdAt: 'desc' },
@@ -56,9 +59,9 @@ export default async function Dashboard({ searchParams }: DashboardProps) {
 
   const stats = {
     total: documents.length,
-    completed: documents.filter((d: Document) => d.status === 'completed').length,
-    processing: documents.filter((d: Document) => d.status === 'processing').length,
-    failed: documents.filter((d: Document) => d.status === 'failed').length,
+    completed: documents.filter((d: any) => d.status === 'completed').length,
+    processing: documents.filter((d: any) => d.status === 'processing').length,
+    failed: documents.filter((d: any) => d.status === 'failed').length,
   };
 
   return (

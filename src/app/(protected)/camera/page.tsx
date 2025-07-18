@@ -59,6 +59,7 @@ export default function CameraPage() {
         // Redirect to dashboard after success
         setTimeout(() => {
           router.push('/dashboard');
+          router.refresh(); // Force refresh to show updated data
         }, 1500);
       } else {
         throw new Error(result.error || 'AI processing failed');

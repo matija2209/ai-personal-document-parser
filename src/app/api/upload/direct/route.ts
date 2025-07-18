@@ -45,7 +45,9 @@ export async function POST(request: NextRequest) {
     const timestamp = new Date().toISOString().split('T')[0];
     const fileId = nanoid(10);
     const fileExtension = file.name.split('.').pop() || 'jpg';
-    const fileKey = `${userId}/${timestamp}/${documentType}_${fileId}.${fileExtension}`;
+    // Clean documentType - remove spaces, brackets, and special characters
+    const cleanDocumentType = documentType.replace(/[^a-zA-Z0-9]/g, '_').replace(/_+/g, '_').replace(/^_|_$/g, '');
+    const fileKey = `${userId}/${timestamp}/${cleanDocumentType}_${fileId}.${fileExtension}`;
 
     // Convert file to buffer
     const fileBuffer = Buffer.from(await file.arrayBuffer());
@@ -92,7 +94,9 @@ export async function POST(request: NextRequest) {
               userId: userId,
               fileKey: fileKey,
               filePath: fileKey,
-              fileType: null, // Could be enhanced to detect 'front'/'back' based on documentType
+              fileType: documentType.includes('(front side)') ? 'front' : 
+                        documentType.includes('(back side)') ? 'back' : 
+                        null,
               originalFileName: file.name,
               compressedSize: file.size,
               originalSize: file.size,

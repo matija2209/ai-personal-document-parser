@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { CapturedImage, DocumentCaptureState } from '@/types/camera';
 import { CameraCapture } from './CameraCapture';
 import { ImagePreview } from './ImagePreview';
@@ -26,6 +26,10 @@ export const DocumentCapture: React.FC<DocumentCaptureProps> = ({
   const [isCreatingDocument, setIsCreatingDocument] = useState(false);
 
   // Create document when component mounts
+  useEffect(() => {
+    createDocument();
+  }, []);
+
   const createDocument = async () => {
     if (documentId) return documentId; // Already created
     
@@ -49,6 +53,9 @@ export const DocumentCapture: React.FC<DocumentCaptureProps> = ({
       const { documentId: newDocumentId } = await response.json();
       setDocumentId(newDocumentId);
       return newDocumentId;
+    } catch (error) {
+      console.error('Failed to create document:', error);
+      throw error;
     } finally {
       setIsCreatingDocument(false);
     }
@@ -127,6 +134,21 @@ export const DocumentCapture: React.FC<DocumentCaptureProps> = ({
   }
 
   if (captureState.currentSide === 'front') {
+    if (isCreatingDocument || !documentId) {
+      return (
+        <div className="document-capture">
+          <div className="mb-4 text-center">
+            <div className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-800">
+              Preparing document...
+            </div>
+          </div>
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+          </div>
+        </div>
+      );
+    }
+    
     return (
       <div className="document-capture">
         <div className="mb-4 text-center">
@@ -138,7 +160,7 @@ export const DocumentCapture: React.FC<DocumentCaptureProps> = ({
         <CameraCapture
           onImageConfirmed={handleFrontCaptured}
           documentType={`${documentType} (front side)`}
-          documentId={documentId || undefined}
+          documentId={documentId}
         />
       </div>
     );
@@ -168,7 +190,7 @@ export const DocumentCapture: React.FC<DocumentCaptureProps> = ({
         <CameraCapture
           onImageConfirmed={handleBackCaptured}
           documentType={`${documentType} (back side)`}
-          documentId={documentId || undefined}
+          documentId={documentId}
         />
       </div>
     );

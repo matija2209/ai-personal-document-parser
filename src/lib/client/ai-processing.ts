@@ -13,6 +13,10 @@ export async function triggerAIProcessing(
   enableDualVerification: boolean = false
 ): Promise<ProcessingResult> {
   try {
+    // Create an AbortController for timeout
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 second timeout
+    
     const response = await fetch('/api/documents/process', {
       method: 'POST',
       headers: {
@@ -22,7 +26,10 @@ export async function triggerAIProcessing(
         documentId,
         enableDualVerification,
       }),
+      signal: controller.signal,
     });
+    
+    clearTimeout(timeoutId);
 
     if (!response.ok) {
       const errorData = await response.json();
@@ -38,6 +45,15 @@ export async function triggerAIProcessing(
     };
   } catch (error) {
     console.error('AI processing failed:', error);
+    
+    // Handle abort error (timeout)
+    if (error instanceof Error && error.name === 'AbortError') {
+      return {
+        success: false,
+        error: 'Processing timed out. Please try again.',
+      };
+    }
+    
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Unknown error',

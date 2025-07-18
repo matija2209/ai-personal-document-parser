@@ -72,7 +72,7 @@ export async function POST(request: NextRequest) {
       for (const document of expiredDocuments) {
         try {
           // Delete files from R2
-          const deletePromises = document.files.map(async (file) => {
+          const deletePromises = document.files.map(async (file: any) => {
             try {
               const deleteCommand = new DeleteObjectCommand({
                 Bucket: R2_CONFIG.bucketName,

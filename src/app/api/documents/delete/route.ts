@@ -36,7 +36,7 @@ export async function DELETE(request: NextRequest) {
     }
     
     // Delete files from R2 storage
-    const deletePromises = document.files.map(async (file) => {
+    const deletePromises = document.files.map(async (file: any) => {
       try {
         const deleteCommand = new DeleteObjectCommand({
           Bucket: R2_CONFIG.bucketName,

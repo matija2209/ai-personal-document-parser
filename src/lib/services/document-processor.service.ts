@@ -36,7 +36,7 @@ export async function processDocument(
       documentType: document.documentType,
       status: document.status,
       fileCount: document.files.length,
-      files: document.files.map(f => ({ id: f.id, fileKey: f.fileKey, fileType: f.fileType }))
+      files: document.files.map((f: any) => ({ id: f.id, fileKey: f.fileKey, fileType: f.fileType }))
     });
 
     if (!document.files.length) {
@@ -44,7 +44,7 @@ export async function processDocument(
     }
 
     // Get the primary image file (front or first available)
-    const primaryFile = document.files.find(file => file.fileType === 'front') || document.files[0];
+    const primaryFile = document.files.find((file: any) => file.fileType === 'front') || document.files[0];
     
     // Construct image URL
     const imageUrl = R2_CONFIG.publicUrl 

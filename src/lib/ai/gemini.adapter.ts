@@ -72,9 +72,18 @@ export class GeminiAdapter implements IAIDocumentProcessor {
     const response = await result.response;
     const text = response.text();
     
-    // Parse JSON response
+    // Parse JSON response - handle markdown code blocks
     try {
-      const parsedData = JSON.parse(text.trim());
+      let cleanedText = text.trim();
+      
+      // Remove markdown code block formatting if present
+      if (cleanedText.startsWith('```json') && cleanedText.endsWith('```')) {
+        cleanedText = cleanedText.slice(7, -3).trim();
+      } else if (cleanedText.startsWith('```') && cleanedText.endsWith('```')) {
+        cleanedText = cleanedText.slice(3, -3).trim();
+      }
+      
+      const parsedData = JSON.parse(cleanedText);
       return parsedData;
     } catch (parseError) {
       throw new Error(`Invalid JSON response from Gemini: ${text}`);

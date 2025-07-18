@@ -22,6 +22,38 @@ export const DocumentCapture: React.FC<DocumentCaptureProps> = ({
     isBackRequired: false
   });
 
+  const [documentId, setDocumentId] = useState<string | null>(null);
+  const [isCreatingDocument, setIsCreatingDocument] = useState(false);
+
+  // Create document when component mounts
+  const createDocument = async () => {
+    if (documentId) return documentId; // Already created
+    
+    setIsCreatingDocument(true);
+    try {
+      const response = await fetch('/api/documents', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          documentType: documentType,
+          retentionDays: 90
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to create document entry');
+      }
+
+      const { documentId: newDocumentId } = await response.json();
+      setDocumentId(newDocumentId);
+      return newDocumentId;
+    } finally {
+      setIsCreatingDocument(false);
+    }
+  };
+
   const [showBackPrompt, setShowBackPrompt] = useState(false);
 
   const handleFrontCaptured = (image: CapturedImage) => {
@@ -49,7 +81,27 @@ export const DocumentCapture: React.FC<DocumentCaptureProps> = ({
   };
 
   const completeDocumentCapture = (front: CapturedImage, back?: CapturedImage) => {
-    onDocumentComplete(front, back);
+    // Add documentId to upload results
+    const frontWithDocId: CapturedImage = {
+      ...front,
+      uploadResult: front.uploadResult ? {
+        ...front.uploadResult,
+        documentId: documentId || undefined
+      } : undefined
+    };
+    
+    let backWithDocId: CapturedImage | undefined = back;
+    if (back) {
+      backWithDocId = {
+        ...back,
+        uploadResult: back.uploadResult ? {
+          ...back.uploadResult,
+          documentId: documentId || undefined
+        } : undefined
+      };
+    }
+    
+    onDocumentComplete(frontWithDocId, backWithDocId);
   };
 
   const handleRetakeBack = () => {
@@ -86,6 +138,7 @@ export const DocumentCapture: React.FC<DocumentCaptureProps> = ({
         <CameraCapture
           onImageConfirmed={handleFrontCaptured}
           documentType={`${documentType} (front side)`}
+          documentId={documentId || undefined}
         />
       </div>
     );
@@ -115,6 +168,7 @@ export const DocumentCapture: React.FC<DocumentCaptureProps> = ({
         <CameraCapture
           onImageConfirmed={handleBackCaptured}
           documentType={`${documentType} (back side)`}
+          documentId={documentId || undefined}
         />
       </div>
     );

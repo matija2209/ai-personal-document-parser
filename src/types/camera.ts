@@ -17,6 +17,8 @@ export interface CapturedImage {
     originalFileName?: string;
     compressedSize?: number;
     originalSize?: number;
+    documentId?: string;
+    documentFileId?: string;
     error?: string;
   };
 }

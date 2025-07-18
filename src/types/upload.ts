@@ -23,6 +23,8 @@ export interface UploadResult {
   originalFileName: string;
   compressedSize: number;
   originalSize: number;
+  documentId?: string;
+  documentFileId?: string;
   error?: string;
 }
 

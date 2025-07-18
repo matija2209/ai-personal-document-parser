@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import { PutObjectCommand } from '@aws-sdk/client-s3';
 import { r2Client, R2_CONFIG } from '@/lib/r2-client';
+import { prisma } from '@/lib/prisma';
 import { nanoid } from 'nanoid';
 
 export async function POST(request: NextRequest) {
@@ -15,6 +16,7 @@ export async function POST(request: NextRequest) {
     const formData = await request.formData();
     const file = formData.get('file') as File;
     const documentType = formData.get('documentType') as string;
+    const documentId = formData.get('documentId') as string;
     
     if (!file || !documentType) {
       return NextResponse.json(
@@ -68,6 +70,42 @@ export async function POST(request: NextRequest) {
     // Return public URL for accessing the file
     const fileUrl = `${R2_CONFIG.publicUrl}/${fileKey}`;
 
+    // Create DocumentFile record in database
+    let documentFile = null;
+    if (documentId) {
+      try {
+        // Verify document exists and belongs to user
+        const document = await prisma.document.findFirst({
+          where: {
+            id: documentId,
+            userId: userId,
+          },
+        });
+
+        if (!document) {
+          console.warn(`Document ${documentId} not found for user ${userId}`);
+        } else {
+          // Create DocumentFile record
+          documentFile = await prisma.documentFile.create({
+            data: {
+              documentId: documentId,
+              userId: userId,
+              fileKey: fileKey,
+              filePath: fileKey,
+              fileType: null, // Could be enhanced to detect 'front'/'back' based on documentType
+              originalFileName: file.name,
+              compressedSize: file.size,
+              originalSize: file.size,
+              mimeType: file.type,
+            },
+          });
+        }
+      } catch (dbError) {
+        console.error('Failed to create DocumentFile record:', dbError);
+        // Don't fail the upload, just log the error
+      }
+    }
+
     return NextResponse.json({
       success: true,
       fileUrl,
@@ -76,12 +114,17 @@ export async function POST(request: NextRequest) {
       originalFileName: file.name,
       compressedSize: file.size,
       originalSize: file.size,
+      documentId: documentId,
+      documentFileId: documentFile?.id,
     });
 
   } catch (error) {
     console.error('Error uploading file:', error);
     return NextResponse.json(
-      { error: 'Failed to upload file', details: error.message },
+      { 
+        error: 'Failed to upload file', 
+        details: error instanceof Error ? error.message : 'Unknown error' 
+      },
       { status: 500 }
     );
   }

@@ -32,6 +32,13 @@ export async function processDocument(
       throw new Error('Document not found or unauthorized');
     }
 
+    console.log(`Processing document ${documentId}:`, {
+      documentType: document.documentType,
+      status: document.status,
+      fileCount: document.files.length,
+      files: document.files.map(f => ({ id: f.id, fileKey: f.fileKey, fileType: f.fileType }))
+    });
+
     if (!document.files.length) {
       throw new Error('No files found for document');
     }

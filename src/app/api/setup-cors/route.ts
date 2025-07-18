@@ -53,7 +53,10 @@ export async function POST() {
   } catch (error) {
     console.error('Error setting CORS:', error);
     return NextResponse.json(
-      { error: 'Failed to set CORS configuration', details: error.message },
+      { 
+        error: 'Failed to set CORS configuration', 
+        details: error instanceof Error ? error.message : 'Unknown error' 
+      },
       { status: 500 }
     );
   }

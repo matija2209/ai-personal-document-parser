@@ -22,7 +22,7 @@ This plan is broken down into self-contained tasks that build upon each other.
 *   **To-Do:**
     1.  **Install SDKs:** In your terminal, install the official clients for Google and OpenAI.
         ```bash
-        npm install @google/generative-ai openai
+        pmpm add @google/generative-ai openai
         ```    2.  **Update Environment Example File:** Add the required API key placeholders to your `.env.example` file. This is a reference for any developer setting up the project.
         ```ini
         # .env.example

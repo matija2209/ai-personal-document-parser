@@ -61,7 +61,7 @@ export function useFileUpload() {
         return uploadResponse.json();
       });
 
-      const { fileUrl, fileKey, filePath } = uploadResult;
+      const { fileUrl, fileKey, filePath, documentId: resultDocumentId, documentFileId } = uploadResult;
       
       const result: UploadResult = {
         success: true,
@@ -71,6 +71,8 @@ export function useFileUpload() {
         originalFileName: file.name,
         compressedSize,
         originalSize,
+        documentId: resultDocumentId,
+        documentFileId,
       };
       
       setUploadState({

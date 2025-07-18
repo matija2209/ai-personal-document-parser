@@ -15,13 +15,15 @@ import { UploadStatus } from '@/components/upload/UploadStatus';
 interface CameraCaptureProps {
   onImageConfirmed?: (image: CapturedImage) => void;
   documentType?: string;
+  documentId?: string;
 }
 
 type CaptureStep = 'capture' | 'review' | 'processing' | 'uploading';
 
 export const CameraCapture: React.FC<CameraCaptureProps> = ({ 
   onImageConfirmed,
-  documentType = 'document'
+  documentType = 'document',
+  documentId
 }) => {
   const [currentStep, setCurrentStep] = useState<CaptureStep>('capture');
   const [capturedImage, setCapturedImage] = useState<CapturedImage | null>(null);
@@ -64,13 +66,39 @@ export const CameraCapture: React.FC<CameraCaptureProps> = ({
         setCurrentStep('uploading');
         resetUpload();
         
-        const uploadResult = await uploadFile(capturedImage.file, documentType);
+        let finalDocumentId = documentId;
+        
+        // If no documentId provided, create a document first
+        if (!finalDocumentId) {
+          const response = await fetch('/api/documents', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              documentType: documentType,
+              retentionDays: 90
+            }),
+          });
+
+          if (!response.ok) {
+            throw new Error('Failed to create document entry');
+          }
+
+          const { documentId: newDocumentId } = await response.json();
+          finalDocumentId = newDocumentId;
+        }
+        
+        const uploadResult = await uploadFile(capturedImage.file, documentType, finalDocumentId);
         
         if (uploadResult.success) {
           if (onImageConfirmed) {
             await onImageConfirmed({
               ...capturedImage,
-              uploadResult
+              uploadResult: {
+                ...uploadResult,
+                documentId: finalDocumentId
+              }
             });
           }
         } else {

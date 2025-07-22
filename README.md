@@ -1,5 +1,7 @@
 # AI Personal Document Parser
 
+> **Note:** This project uses [pnpm](https://pnpm.io/) as its package manager. Please install pnpm globally if you haven't already: `npm install -g pnpm`
+
 A modern, secure web application that uses AI to extract and manage information from personal documents like passports and driver's licenses. Built with Next.js 15, Clerk authentication, Cloudflare R2 storage, and multiple AI providers.
 
 ## 🚀 Features
@@ -45,7 +47,7 @@ src/
 ## 🛠️ Setup & Development
 
 ### Prerequisites
-- Node.js 18+ and npm
+- Node.js 18+ and pnpm
 - Neon PostgreSQL database
 - Cloudflare R2 storage account
 - Clerk.io authentication account
@@ -57,7 +59,7 @@ src/
    ```bash
    git clone <repository-url>
    cd ai-personal-document-parser
-   npm install
+   pnpm install
    ```
 
 2. **Environment Configuration:**
@@ -104,7 +106,7 @@ src/
 
 4. **Development Server:**
    ```bash
-   npm run dev
+   pnpm run dev
    ```
 
 ### Testing R2 Connection
@@ -201,18 +203,18 @@ This project is designed for step-by-step implementation across 7 phases:
 
 ```bash
 # Development
-npm run dev          # Start development server
-npm run build        # Build for production
-npm run start        # Start production server
+pnpm run dev          # Start development server
+pnpm run build        # Build for production
+pnpm run start        # Start production server
 
 # Database
-npx prisma migrate dev    # Run database migrations
-npx prisma generate      # Generate Prisma client
-npx prisma studio        # Open Prisma Studio
+pnpx prisma migrate dev    # Run database migrations
+pnpx prisma generate      # Generate Prisma client
+pnpx prisma studio        # Open Prisma Studio
 
 # Code Quality
-npm run lint         # Run ESLint
-npm run type-check   # Run TypeScript check
+pnpm run lint         # Run ESLint
+pnpm run type-check   # Run TypeScript check
 ```
 
 ## 🚀 Deployment

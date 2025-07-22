@@ -9,11 +9,15 @@ import { QualityIndicator } from './QualityIndicator';
 interface DocumentCaptureProps {
   onDocumentComplete: (front: CapturedImage, back?: CapturedImage) => void;
   documentType?: string;
+  formTemplateId?: string | null;
+  guestCount?: number | null;
 }
 
 export const DocumentCapture: React.FC<DocumentCaptureProps> = ({
   onDocumentComplete,
-  documentType = 'document'
+  documentType = 'document',
+  formTemplateId,
+  guestCount
 }) => {
   const [captureState, setCaptureState] = useState<DocumentCaptureState>({
     currentSide: 'front',
@@ -27,39 +31,42 @@ export const DocumentCapture: React.FC<DocumentCaptureProps> = ({
 
   // Create document when component mounts
   useEffect(() => {
-    createDocument();
-  }, []);
+    const createDocument = async () => {
+      if (documentId || isCreatingDocument) return; // Already created or creating
+      
+      setIsCreatingDocument(true);
+      try {
+        const response = await fetch('/api/documents', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            documentType: documentType,
+            retentionDays: 90,
+            formTemplateId: formTemplateId,
+            guestCount: guestCount
+          }),
+        });
 
-  const createDocument = async () => {
-    if (documentId) return documentId; // Already created
-    
-    setIsCreatingDocument(true);
-    try {
-      const response = await fetch('/api/documents', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          documentType: documentType,
-          retentionDays: 90
-        }),
-      });
+        if (!response.ok) {
+          throw new Error('Failed to create document entry');
+        }
 
-      if (!response.ok) {
-        throw new Error('Failed to create document entry');
+        const { documentId: newDocumentId } = await response.json();
+        console.log('DocumentCapture created document:', newDocumentId);
+        setDocumentId(newDocumentId);
+      } catch (error) {
+        console.error('Failed to create document:', error);
+      } finally {
+        setIsCreatingDocument(false);
       }
+    };
 
-      const { documentId: newDocumentId } = await response.json();
-      setDocumentId(newDocumentId);
-      return newDocumentId;
-    } catch (error) {
-      console.error('Failed to create document:', error);
-      throw error;
-    } finally {
-      setIsCreatingDocument(false);
+    if (!documentId && !isCreatingDocument) {
+      createDocument();
     }
-  };
+  }, [documentId, isCreatingDocument, documentType]);
 
   const [showBackPrompt, setShowBackPrompt] = useState(false);
 
@@ -160,13 +167,16 @@ export const DocumentCapture: React.FC<DocumentCaptureProps> = ({
         <CameraCapture
           onImageConfirmed={handleFrontCaptured}
           documentType={`${documentType} (front side)`}
-          documentId={documentId}
+          documentId={documentId || undefined}
+          formTemplateId={formTemplateId}
+          guestCount={guestCount}
         />
       </div>
     );
   }
 
   if (captureState.currentSide === 'back') {
+    console.log('Rendering back side CameraCapture with documentId:', documentId);
     return (
       <div className="document-capture">
         <div className="mb-4 text-center">
@@ -190,7 +200,9 @@ export const DocumentCapture: React.FC<DocumentCaptureProps> = ({
         <CameraCapture
           onImageConfirmed={handleBackCaptured}
           documentType={`${documentType} (back side)`}
-          documentId={documentId}
+          documentId={documentId || undefined}
+          formTemplateId={formTemplateId}
+          guestCount={guestCount}
         />
       </div>
     );

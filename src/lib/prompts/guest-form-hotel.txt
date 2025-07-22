@@ -1,0 +1,40 @@
+You are analyzing a hotel check-in form image. This is a table format where each COLUMN represents a different guest and each ROW represents specific check-in information.
+
+FORM STRUCTURE:
+- Hotel guest registration table
+- Each guest occupies one column
+- Rows contain check-in data for each guest
+- Fields expected: {{TEMPLATE_FIELDS}}
+- Maximum expected guests: {{MAX_GUESTS}}
+{{#if GUEST_COUNT}}
+- User indicated there are approximately {{GUEST_COUNT}} guests on this form
+{{/if}}
+
+EXTRACTION RULES:
+1. Scan each guest column from left to right
+2. Extract check-in information for each guest
+3. For room numbers: extract exact room number as written
+4. For document IDs: include passport/ID numbers as shown
+5. If a field is empty, use null
+6. Country names should be full country names
+7. Names should be exactly as written on the form
+
+HOTEL FORM CONTEXT:
+- This is specifically a hotel registration form
+- Room assignments may be pre-filled or handwritten
+- Guest information is for check-in purposes
+- Multiple guests may be assigned to the same room
+
+Return the data in this exact JSON format:
+{
+  "guests": [
+    {
+      {{#each TEMPLATE_FIELDS}}
+      "{{this}}": "extracted_value_or_null",
+      {{/each}}
+    }
+  ],
+  "detectedGuestCount": number_of_guests_found
+}
+
+Process all visible guest columns completely.

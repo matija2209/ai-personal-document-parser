@@ -1,0 +1,36 @@
+You are analyzing a guest registration form image. This is a table format where each COLUMN represents a different guest (Guest 1, Guest 2, etc.) and each ROW represents a specific piece of information.
+
+FORM STRUCTURE:
+- This is a table with guests as COLUMNS (vertical layout)
+- Each guest occupies one column
+- Rows contain different data fields for each guest
+- Fields expected: {{TEMPLATE_FIELDS}}
+- Maximum expected guests: {{MAX_GUESTS}}
+{{#if GUEST_COUNT}}
+- User indicated there are approximately {{GUEST_COUNT}} guests on this form
+{{/if}}
+
+EXTRACTION RULES:
+1. Scan each column from left to right (Guest 1, Guest 2, Guest 3, etc.)
+2. For each guest column, extract all available field values from top to bottom
+3. If a field is empty, use null
+4. If handwriting is unclear, use your best interpretation
+5. For document types: use "passport", "id", or "driving-license"
+6. For dates: use YYYY-MM-DD format when possible
+7. Country names should be full country names (not codes)
+
+IMPORTANT: This is a GUEST FORM, not a personal document. Do not extract data as if it's a single person's document.
+
+Return the data in this exact JSON format:
+{
+  "guests": [
+    {
+      {{#each TEMPLATE_FIELDS}}
+      "{{this}}": "extracted_value_or_null",
+      {{/each}}
+    }
+  ],
+  "detectedGuestCount": number_of_guests_found
+}
+
+Extract data for ALL guests visible in the image, even if some fields are empty.

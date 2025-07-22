@@ -16,6 +16,8 @@ interface CameraCaptureProps {
   onImageConfirmed?: (image: CapturedImage) => void;
   documentType?: string;
   documentId?: string;
+  formTemplateId?: string | null;
+  guestCount?: number | null;
 }
 
 type CaptureStep = 'capture' | 'review' | 'processing' | 'uploading';
@@ -23,7 +25,9 @@ type CaptureStep = 'capture' | 'review' | 'processing' | 'uploading';
 export const CameraCapture: React.FC<CameraCaptureProps> = ({ 
   onImageConfirmed,
   documentType = 'document',
-  documentId
+  documentId,
+  formTemplateId,
+  guestCount
 }) => {
   const [currentStep, setCurrentStep] = useState<CaptureStep>('capture');
   const [capturedImage, setCapturedImage] = useState<CapturedImage | null>(null);
@@ -66,10 +70,12 @@ export const CameraCapture: React.FC<CameraCaptureProps> = ({
         setCurrentStep('uploading');
         resetUpload();
         
+        console.log('CameraCapture handleConfirm - documentId prop:', documentId);
         let finalDocumentId = documentId;
         
         // If no documentId provided, create a document first
         if (!finalDocumentId) {
+          console.log('No documentId provided, creating new document');
           const response = await fetch('/api/documents', {
             method: 'POST',
             headers: {
@@ -77,7 +83,9 @@ export const CameraCapture: React.FC<CameraCaptureProps> = ({
             },
             body: JSON.stringify({
               documentType: documentType,
-              retentionDays: 90
+              retentionDays: 90,
+              formTemplateId: formTemplateId,
+              guestCount: guestCount
             }),
           });
 
@@ -87,6 +95,9 @@ export const CameraCapture: React.FC<CameraCaptureProps> = ({
 
           const { documentId: newDocumentId } = await response.json();
           finalDocumentId = newDocumentId;
+          console.log('Created new document:', newDocumentId);
+        } else {
+          console.log('Using existing documentId:', finalDocumentId);
         }
         
         const uploadResult = await uploadFile(capturedImage.file, documentType, finalDocumentId);

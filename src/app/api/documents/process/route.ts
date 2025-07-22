@@ -20,6 +20,8 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { documentId, enableDualVerification } = ProcessRequestSchema.parse(body);
     
+    console.log('🔄 Processing API called for document:', documentId);
+    
     // Verify document exists and belongs to user
     const document = await prisma.document.findFirst({
       where: {

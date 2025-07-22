@@ -48,6 +48,11 @@ export default async function Dashboard({ searchParams }: DashboardProps) {
     where: whereClause,
     include: {
       files: true,
+      formTemplate: {
+        select: {
+          name: true,
+        },
+      },
       extractions: {
         select: { confidenceScore: true },
         orderBy: { createdAt: 'desc' },

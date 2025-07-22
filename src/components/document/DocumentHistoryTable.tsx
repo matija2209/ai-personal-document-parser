@@ -17,6 +17,10 @@ interface Document {
   documentType: string;
   status: string;
   createdAt: string | Date;
+  formTemplate?: {
+    name: string;
+  } | null;
+  guestCount?: number | null;
   extractions: Array<{
     confidenceScore: number | null;
   }>;
@@ -113,7 +117,14 @@ export function DocumentHistoryTable({ initialDocuments }: DocumentHistoryTableP
     }
   };
 
-  const formatDocumentType = (type: string) => {
+  const formatDocumentType = (type: string, formTemplate?: { name: string } | null, guestCount?: number | null) => {
+    if (type === 'guest-form' && formTemplate) {
+      let displayName = formTemplate.name;
+      if (guestCount) {
+        displayName += ` (${guestCount} guests)`;
+      }
+      return displayName;
+    }
     return type.replace(/[_-]/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
   };
 
@@ -183,7 +194,7 @@ export function DocumentHistoryTable({ initialDocuments }: DocumentHistoryTableP
               filteredDocuments.map((doc) => (
                 <TableRow key={doc.id}>
                   <TableCell className="font-medium">
-                    {formatDocumentType(doc.documentType)}
+                    {formatDocumentType(doc.documentType, doc.formTemplate, doc.guestCount)}
                   </TableCell>
                   <TableCell>
                     {new Date(doc.createdAt).toLocaleDateString()}
@@ -200,7 +211,7 @@ export function DocumentHistoryTable({ initialDocuments }: DocumentHistoryTableP
                   <TableCell className="text-right">
                     <div className="flex justify-end space-x-2">
                       <Button asChild variant="outline" size="sm">
-                        <Link href={`/dashboard/document/${doc.id}`}>
+                        <Link href={doc.documentType === 'guest-form' ? `/dashboard/document/${doc.id}/guests` : `/dashboard/document/${doc.id}`}>
                           View
                         </Link>
                       </Button>

@@ -1,5 +1,6 @@
 import { auth } from '@clerk/nextjs/server'
 import { prisma } from '@/lib/prisma'
+import { TemplateManagement } from '@/components/settings/TemplateManagement'
 
 export default async function Settings() {
   const { userId } = await auth()
@@ -32,6 +33,12 @@ export default async function Settings() {
               <p className="mt-1 text-sm text-gray-900">{user?.email || 'Not provided'}</p>
             </div>
           </div>
+        </div>
+      </div>
+
+      <div className="bg-white shadow rounded-lg">
+        <div className="px-4 py-5 sm:p-6">
+          <TemplateManagement />
         </div>
       </div>
 

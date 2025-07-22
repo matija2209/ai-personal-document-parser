@@ -10,10 +10,15 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { documentType, retentionDays } = await request.json();
+    const { documentType, retentionDays, formTemplateId, guestCount } = await request.json();
 
     if (!documentType) {
       return NextResponse.json({ error: 'Document type is required' }, { status: 400 });
+    }
+
+    // Validate guest form requirements
+    if (documentType === 'guest-form' && !formTemplateId) {
+      return NextResponse.json({ error: 'Form template is required for guest forms' }, { status: 400 });
     }
 
     // Ensure user exists in database
@@ -31,6 +36,8 @@ export async function POST(request: NextRequest) {
         userId,
         documentType,
         retentionDays: retentionDays || null,
+        formTemplateId: formTemplateId || null,
+        guestCount: guestCount || null,
         status: 'processing',
       },
     });

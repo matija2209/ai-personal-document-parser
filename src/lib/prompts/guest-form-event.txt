@@ -1,0 +1,40 @@
+You are analyzing an event registration form image. This is a table format where each COLUMN represents a different attendee and each ROW represents specific registration information.
+
+FORM STRUCTURE:
+- Event attendee registration table
+- Each attendee occupies one column
+- Rows contain registration data for each attendee
+- Fields expected: {{TEMPLATE_FIELDS}}
+- Maximum expected attendees: {{MAX_GUESTS}}
+{{#if GUEST_COUNT}}
+- User indicated there are approximately {{GUEST_COUNT}} attendees on this form
+{{/if}}
+
+EXTRACTION RULES:
+1. Scan each attendee column from left to right
+2. Extract registration information for each attendee
+3. For full names: combine first and last names if separated
+4. For email addresses: extract complete email addresses
+5. For phone numbers: include full phone numbers with country codes if visible
+6. If a field is empty, use null
+7. Ensure email format is valid (contains @ symbol)
+
+EVENT FORM CONTEXT:
+- This is specifically an event registration form
+- Contact information is crucial for event communication
+- Names may be printed or handwritten
+- Email and phone fields are typically required
+
+Return the data in this exact JSON format:
+{
+  "guests": [
+    {
+      {{#each TEMPLATE_FIELDS}}
+      "{{this}}": "extracted_value_or_null",
+      {{/each}}
+    }
+  ],
+  "detectedGuestCount": number_of_guests_found
+}
+
+Extract all visible attendee information completely.

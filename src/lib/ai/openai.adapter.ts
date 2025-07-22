@@ -1,9 +1,10 @@
 import OpenAI from 'openai';
-import { IAIDocumentProcessor, AIProviderResponse, DocumentType } from './types';
+import { IAIDocumentProcessor, AIProviderResponse, DocumentType, FormTemplate, GuestFormExtractionData } from './types';
 import { getPromptForDocument } from './prompts';
 import { handleAIProviderError } from './error-handler';
 import { withRetry } from './retry-manager';
 import { rateLimiter } from './rate-limiter';
+import { buildGuestFormPrompt } from '@/lib/services/prompt-builder.service';
 
 export class OpenAIAdapter implements IAIDocumentProcessor {
   private client: OpenAI;
@@ -18,7 +19,9 @@ export class OpenAIAdapter implements IAIDocumentProcessor {
   
   async extractDataFromDocument(
     imageUrl: string,
-    documentType: DocumentType
+    documentType: DocumentType,
+    template?: FormTemplate,
+    guestCount?: number
   ): Promise<AIProviderResponse> {
     return withRetry(async () => {
       try {
@@ -26,10 +29,12 @@ export class OpenAIAdapter implements IAIDocumentProcessor {
         await rateLimiter.checkRateLimit('openai');
         
         // Make API call with timeout
+        const timeoutMs = 30000; // 30s timeout
+        
         const result = await Promise.race([
-          this.makeOpenAICall(imageUrl, documentType),
+          this.makeOpenAICall(imageUrl, documentType, template, guestCount),
           new Promise<never>((_, reject) => 
-            setTimeout(() => reject(new Error('Request timeout')), 30000)
+            setTimeout(() => reject(new Error('Request timeout')), timeoutMs)
           )
         ]);
         
@@ -41,8 +46,18 @@ export class OpenAIAdapter implements IAIDocumentProcessor {
     });
   }
   
-  private async makeOpenAICall(imageUrl: string, documentType: DocumentType) {
-    const prompt = getPromptForDocument(documentType);
+  private async makeOpenAICall(
+    imageUrl: string, 
+    documentType: DocumentType, 
+    template?: FormTemplate, 
+    guestCount?: number
+  ) {
+    let prompt: string;
+    if (documentType === 'guest-form' && template) {
+      prompt = await buildGuestFormPrompt(template, guestCount);
+    } else {
+      prompt = getPromptForDocument(documentType);
+    }
     
     const response = await this.client.chat.completions.create({
       model: 'gpt-4o-mini',

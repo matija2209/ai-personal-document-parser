@@ -27,23 +27,28 @@ model User {
 model Document {
   id            String    @id @default(cuid())
   userId        String
-  documentType  String    // "driving_license", "passport", etc.
+  documentType  String    // "driving_license", "passport", "guest-form", etc.
   status        String    @default("processing") // "processing", "completed", "failed"
   retentionDays Int?      // null = keep forever, number = days to keep
+  formTemplateId String?  // For guest forms - reference to template used
+  guestCount    Int?      // Optional hint for AI processing
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
   deletedAt     DateTime? // soft delete for retention logic
   
   // Relations
-  user          User            @relation(fields: [userId], references: [clerkId], onDelete: Cascade)
-  files         DocumentFile[]
-  extractions   Extraction[]
-  errors        ProcessingError[]
+  user             User              @relation(fields: [userId], references: [clerkId], onDelete: Cascade)
+  files            DocumentFile[]
+  extractions      Extraction[]
+  errors           ProcessingError[]
+  formTemplate     FormTemplate?     @relation(fields: [formTemplateId], references: [id])
+  guestExtractions GuestExtraction[]
   
   @@index([userId])
   @@index([createdAt])
   @@index([status])
   @@index([retentionDays])
+  @@index([formTemplateId])
   @@map("documents")
 }
 
@@ -107,4 +112,35 @@ model ProcessingError {
   @@index([documentId])
   @@index([resolved])
   @@map("processing_errors")
+}
+
+model FormTemplate {
+  id          String   @id @default(cuid())
+  name        String   @unique // "Basic Guest Registration", "Hotel Check-in"
+  description String   // "5-guest table with: first name, last name..."
+  fields      Json     // ["firstName", "lastName", "birthDate", "country", "documentType", "documentId"]
+  maxGuests   Int      @default(5)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Relations
+  documents   Document[]
+  
+  @@map("form_templates")
+}
+
+model GuestExtraction {
+  id           String @id @default(cuid())
+  documentId   String
+  guestIndex   Int    // 1, 2, 3, 4, 5 (column position)
+  extractedData Json  // {firstName: "John", lastName: "Doe", ...}
+  createdAt    DateTime @default(now())
+  
+  // Relations
+  document     Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  
+  @@unique([documentId, guestIndex])
+  @@index([documentId])
+  @@map("guest_extractions")
 }

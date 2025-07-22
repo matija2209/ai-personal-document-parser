@@ -2,6 +2,7 @@
   "buildCommand": "pnpm build",
   "outputDirectory": ".next",
   "framework": "nextjs",
+  "installCommand": "pnpm install && pnpm prisma generate",
   "functions": {
     "src/app/api/**/*.ts": {
       "maxDuration": 30

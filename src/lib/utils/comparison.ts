@@ -1,4 +1,9 @@
-import { AIProviderResponse, ExtractedData } from '@/lib/ai/types';
+import { AIProviderResponse, ExtractedData, GuestFormExtractionData } from '@/lib/ai/types';
+
+// Type guard to check if data is ExtractedData vs GuestFormExtractionData
+function isExtractedData(data: ExtractedData | GuestFormExtractionData): data is ExtractedData {
+  return !('guests' in data);
+}
 
 export interface ReconciliationResult {
   finalData: ExtractedData;
@@ -28,6 +33,11 @@ export function reconcileAIResults(
     ]);
     
     for (const key of allKeys) {
+      // Type guard to ensure we're working with ExtractedData (not GuestFormExtractionData)
+      if (!isExtractedData(primaryResult.data) || !isExtractedData(secondaryResult.data)) {
+        continue; // Skip comparison for guest forms
+      }
+      
       const primaryValue = primaryResult.data[key];
       const secondaryValue = secondaryResult.data[key];
       

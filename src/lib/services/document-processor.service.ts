@@ -2,9 +2,9 @@ import { prisma } from '@/lib/prisma';
 import { GeminiAdapter } from '@/lib/ai/gemini.adapter';
 import { OpenAIAdapter } from '@/lib/ai/openai.adapter';
 import { DocumentType, GuestFormExtractionData } from '@/lib/ai/types';
+import type { FormTemplate } from '@/lib/ai/types';
 import { reconcileAIResults, calculateConfidenceScore } from '@/lib/utils/comparison';
 import { R2_CONFIG } from '@/lib/r2-client';
-import { getTemplateById } from '@/lib/services/form-template.service';
 
 export interface ProcessingResult {
   extractionId: string;
@@ -74,7 +74,7 @@ export async function processDocument(
     const geminiAdapter = new GeminiAdapter();
     
     // Get template for guest forms
-    let template = null;
+    let template: FormTemplate | undefined = undefined;
     if (documentType === 'guest-form' && document.formTemplate) {
       template = {
         ...document.formTemplate,
@@ -149,7 +149,7 @@ export async function processDocument(
       const guestData = finalData as GuestFormExtractionData;
       
       // Save main extraction record
-      const extraction = await prisma.extraction.create({
+      await prisma.extraction.create({
         data: {
           documentId,
           modelName: enableDualVerification && secondaryResult 
@@ -176,7 +176,7 @@ export async function processDocument(
       }
     } else {
       // Regular document extraction
-      const extraction = await prisma.extraction.create({
+      await prisma.extraction.create({
         data: {
           documentId,
           modelName: enableDualVerification && secondaryResult 

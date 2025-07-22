@@ -1,4 +1,4 @@
-export const getPromptForDocument = (documentType: 'passport' | 'driving-license'): string => {
+export const getPromptForDocument = (documentType: 'passport' | 'driving-license' | 'guest-form'): string => {
   const basePrompt = `You are an expert document data extraction AI. Analyze the image of the document provided. Extract the key information and return it ONLY as a valid JSON object. Do not include any other text or markdown formatting.`;
 
   if (documentType === 'passport') {

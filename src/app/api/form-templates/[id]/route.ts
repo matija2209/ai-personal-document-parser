@@ -3,8 +3,8 @@ import { auth } from '@clerk/nextjs/server';
 import { getTemplateById, updateTemplate, deleteTemplate } from '@/lib/services/form-template.service';
 
 export async function GET(
-  request: NextRequest,
-  { params }: { params: { id: string } }
+  request: Request,
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { userId } = await auth();
@@ -13,7 +13,9 @@ export async function GET(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const template = await getTemplateById(params.id);
+
+
+    const template = await getTemplateById((await params).id);
 
     if (!template) {
       return NextResponse.json({ error: 'Template not found' }, { status: 404 });
@@ -32,7 +34,7 @@ export async function GET(
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { userId } = await auth();
@@ -44,7 +46,7 @@ export async function PUT(
     const body = await request.json();
     const { name, description, fields, maxGuests, isActive } = body;
 
-    const template = await updateTemplate(params.id, {
+    const template = await updateTemplate((await params).id, {
       name,
       description,
       fields,
@@ -65,7 +67,7 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { userId } = await auth();
@@ -74,7 +76,7 @@ export async function DELETE(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    await deleteTemplate(params.id);
+    await deleteTemplate((await params).id);
     return NextResponse.json({ success: true });
 
   } catch (error) {

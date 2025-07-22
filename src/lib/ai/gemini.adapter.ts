@@ -52,7 +52,7 @@ export class GeminiAdapter implements IAIDocumentProcessor {
     template?: FormTemplate, 
     guestCount?: number
   ) {
-    const model = this.client.getGenerativeModel({ model: 'gemini-1.5-flash-latest' });
+    const model = this.client.getGenerativeModel({ model: 'gemini-2.5-flash' });
     
     let prompt: string;
     if (documentType === 'guest-form' && template) {

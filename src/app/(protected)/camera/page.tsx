@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
 import { CameraCapture } from '@/components/camera/CameraCapture';
 import { DocumentCapture } from '@/components/camera/DocumentCapture';
 import { DocumentTypeSelector, DocumentTypeOption } from '@/components/camera/DocumentTypeSelector';
@@ -44,12 +45,9 @@ export default function CameraPage() {
       setProcessingStep('Upload completed! Processing in background...');
       
       // Show success message and redirect immediately
-      const successMessage = `Document uploaded successfully!\n` +
-        `Document ID: ${documentId}\n` +
-        `AI processing has been started in the background.\n` +
-        `Check your dashboard for processing status.`;
-      
-      alert(successMessage);
+      toast.success('Document uploaded successfully!', {
+        description: `Document ID: ${documentId}. AI processing has been started in the background. Check your dashboard for processing status.`
+      });
       
       // Redirect immediately to dashboard
       setTimeout(() => {
@@ -63,7 +61,9 @@ export default function CameraPage() {
       setProcessingStep('Failed to schedule processing');
       
       // Show error but still allow navigation
-      alert(`Failed to schedule processing: ${error instanceof Error ? error.message : 'Unknown error'}\nYou can retry processing from the dashboard.`);
+      toast.error('Failed to schedule processing', {
+        description: `${error instanceof Error ? error.message : 'Unknown error'}. You can retry processing from the dashboard.`
+      });
       
       // Still redirect to dashboard
       setTimeout(() => {
@@ -107,7 +107,7 @@ export default function CameraPage() {
     } catch (error) {
       console.error('Failed to process image:', error);
       setProcessingError(error instanceof Error ? error.message : 'Unknown error');
-      alert('Failed to process image. Please try again.');
+      toast.error('Failed to process image. Please try again.');
     } finally {
       setIsProcessing(false);
     }
@@ -156,7 +156,7 @@ export default function CameraPage() {
     } catch (error) {
       console.error('Failed to process document:', error);
       setProcessingError(error instanceof Error ? error.message : 'Unknown error');
-      alert('Failed to process document. Please try again.');
+      toast.error('Failed to process document. Please try again.');
     } finally {
       setIsProcessing(false);
     }

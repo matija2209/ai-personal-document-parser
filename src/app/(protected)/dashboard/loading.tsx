@@ -1,5 +1,5 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Skeleton, TableSkeleton } from '@/components/ui/Skeleton';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export default function DashboardLoading() {
   return (
@@ -32,7 +32,8 @@ export default function DashboardLoading() {
           <Skeleton className="h-4 w-64" />
         </CardHeader>
         <CardContent>
-          <TableSkeleton rows={6} />
+          <Skeleton className="h-4 w-full mb-2" />
+          <Skeleton className="h-4 w-full mb-2" />
         </CardContent>
       </Card>
     </div>

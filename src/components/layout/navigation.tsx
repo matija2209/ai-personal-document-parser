@@ -1,5 +1,7 @@
 import { UserButton, SignInButton, SignedIn, SignedOut } from '@clerk/nextjs'
 import Link from 'next/link';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { ChevronDownIcon } from 'lucide-react';
 
 export function Navigation() {
   return (
@@ -14,24 +16,23 @@ export function Navigation() {
           
           <div className="flex items-center space-x-4">
             <SignedIn>
-              <Link 
-                href="/dashboard" 
-                className="text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
-              >
-                Dashboard
-              </Link>
-              <Link 
-                href="/camera" 
-                className="text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
-              >
-                Camera
-              </Link>
-              <Link 
-                href="/settings" 
-                className="text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
-              >
-                Settings
-              </Link>
+              <DropdownMenu>
+                <DropdownMenuTrigger className="flex items-center space-x-1 text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium hover:bg-gray-100">
+                  <span>Menu</span>
+                  <ChevronDownIcon className="h-4 w-4" />
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem asChild>
+                    <Link href="/dashboard">Dashboard</Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href="/camera">Camera</Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href="/settings">Settings</Link>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
               <UserButton afterSignOutUrl="/" />
             </SignedIn>
             

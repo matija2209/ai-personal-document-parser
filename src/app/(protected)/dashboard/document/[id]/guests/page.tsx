@@ -10,7 +10,7 @@ import { GuestData } from '@/lib/ai/types';
 import { DocumentImageDisplay } from '@/components/results/DocumentImageDisplay';
 
 interface PageProps {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }
 
 export default async function GuestFormResultsPage({ params }: PageProps) {
@@ -23,7 +23,7 @@ export default async function GuestFormResultsPage({ params }: PageProps) {
   // Fetch document with guest extractions and template
   const document = await prisma.document.findFirst({
     where: {
-      id: params.id,
+      id: (await params).id,
       userId: userId,
       documentType: 'guest-form',
     },

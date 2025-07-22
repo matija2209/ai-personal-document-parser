@@ -1,6 +1,6 @@
 import { UploadState } from '@/types/upload';
 import { UploadProgress } from './UploadProgress';
-import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
+import { LoadingSpinner } from '@/components/LoadingSpinner';
 
 interface UploadStatusProps {
   uploadState: UploadState;

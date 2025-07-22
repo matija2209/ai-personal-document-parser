@@ -1,11 +1,12 @@
 {
   "name": "ai-personal-document-parser",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "private": true,
   "packageManager": "pnpm@10.0.0",
   "scripts": {
+    "preinstall": "npx prisma generate",
     "dev": "next dev --turbopack",
-    "build": "next build",
+    "build": "npx prisma generate && next build",
     "start": "next start",
     "lint": "next lint",
     "postinstall": "prisma generate"

@@ -246,7 +246,8 @@ export function EditableDataTable({
                           </span>
                           
                           {hoveredRow === row.id && (
-                            <Copy className="h-3 w-3 text-muted-foreground ml-2 opacity-50 group-hover:opacity-100 transition-opacity" />
+                            <></>
+                            // <Copy className="h-3 w-3 text-muted-foreground ml-2 opacity-50 group-hover:opacity-100 transition-opacity" />
                           )}
                         </div>
                       </TableCell>
@@ -254,17 +255,18 @@ export function EditableDataTable({
                     
                     <TableCell>
                       {hoveredRow === row.id && (
-                        <Button
-                          variant="ghost"
-                          size="sm"
+                        // <></>
+                        <button
+                          // variant="ghost"
+                          // size="sm"
                           onClick={(e) => {
                             e.stopPropagation();
                             handleEditClick(row.id);
                           }}
-                          className="h-8 w-8 p-0"
+                          // className="h-8 w-8 p-0"
                         >
-                          <Pencil className="h-4 w-4" />
-                        </Button>
+                          <Pencil className="h-3 w-3" />
+                        </button>
                       )}
                     </TableCell>
                   </TableRow>

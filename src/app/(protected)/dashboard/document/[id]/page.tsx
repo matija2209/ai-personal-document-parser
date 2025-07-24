@@ -1,7 +1,7 @@
 import { auth } from '@clerk/nextjs/server';
 import { prisma } from '@/lib/prisma';
 import { notFound } from 'next/navigation';
-import { DocumentResults } from '@/components/document/DocumentResults';
+import { DocumentPageWrapper } from '@/components/document/document-page-wrapper';
 import { DocumentWithRelations } from '@/types/document-data';
 
 interface DocumentPageProps {
@@ -42,8 +42,8 @@ export default async function DocumentPage({ params }: DocumentPageProps) {
   }
   
   return (
-    <div className="container mx-auto px-4 py-4 sm:py-8 max-w-5xl">
-      <DocumentResults 
+    <div className="mx-auto px-4 py-4 sm:py-8 ">
+      <DocumentPageWrapper 
         document={document}
         hasErrors={document.errors.length > 0}
       />

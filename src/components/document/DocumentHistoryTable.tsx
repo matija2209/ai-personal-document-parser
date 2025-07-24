@@ -211,7 +211,7 @@ export function DocumentHistoryTable({ initialDocuments }: DocumentHistoryTableP
                   <TableCell className="text-right">
                     <div className="flex justify-end space-x-2">
                       <Button asChild variant="outline" size="sm">
-                        <Link href={doc.documentType === 'guest-form' ? `/dashboard/document/${doc.id}/guests` : `/dashboard/document/${doc.id}`}>
+                        <Link href={`/dashboard/document/${doc.id}`}>
                           View
                         </Link>
                       </Button>

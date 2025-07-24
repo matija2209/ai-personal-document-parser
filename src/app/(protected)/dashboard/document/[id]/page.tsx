@@ -2,6 +2,7 @@ import { auth } from '@clerk/nextjs/server';
 import { prisma } from '@/lib/prisma';
 import { notFound } from 'next/navigation';
 import { DocumentResults } from '@/components/document/DocumentResults';
+import { DocumentWithRelations } from '@/types/document-data';
 
 interface DocumentPageProps {
   params: Promise<{ id: string }>;
@@ -24,26 +25,26 @@ export default async function DocumentPage({ params }: DocumentPageProps) {
       files: true,
       extractions: {
         orderBy: { createdAt: 'desc' },
-        take: 1,
       },
+      guestExtractions: {
+        orderBy: { guestIndex: 'asc' },
+      },
+      formTemplate: true,
       errors: {
         where: { resolved: false },
         orderBy: { createdAt: 'desc' },
       },
     },
-  });
+  }) as DocumentWithRelations | null;
   
   if (!document) {
     notFound();
   }
   
-  const extraction = document.extractions[0];
-  
   return (
-    <div className="container mx-auto px-4 py-4 sm:py-8 max-w-4xl">
+    <div className="container mx-auto px-4 py-4 sm:py-8 max-w-5xl">
       <DocumentResults 
         document={document}
-        extraction={extraction}
         hasErrors={document.errors.length > 0}
       />
     </div>

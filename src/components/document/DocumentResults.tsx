@@ -12,79 +12,32 @@ import { Separator } from '@/components/ui/separator';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { DocumentStatus } from './DocumentStatus';
 import { ImagePreview } from './ImagePreview';
+import { EditableDataTable } from './EditableDataTable';
+import { DocumentWithRelations } from '@/types/document-data';
+import { Download, FileText } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface DocumentResultsProps {
-  document: {
-    id: string;
-    documentType: string;
-    status: string;
-    createdAt: Date;
-    updatedAt: Date;
-    files: Array<{
-      id: string;
-      fileKey: string;
-      originalFileName: string;
-      fileType?: string | null;
-    }>;
-  };
-  extraction?: {
-    id: string;
-    extractionData: any;
-    fieldsForReview: any;
-    confidenceScore: number | null;
-    modelName: string;
-    createdAt: Date;
-  };
+  document: DocumentWithRelations;
   hasErrors: boolean;
 }
 
-export function DocumentResults({ document, extraction, hasErrors }: DocumentResultsProps) {
-  const [isEditing, setIsEditing] = useState(false);
-  const [formData, setFormData] = useState(extraction?.extractionData || {});
-  const [isLoading, setIsLoading] = useState(false);
+export function DocumentResults({ document, hasErrors }: DocumentResultsProps) {
   const [isDeleting, setIsDeleting] = useState(false);
   const router = useRouter();
+  
+  // Get the latest extraction for compatibility
+  const extraction = document.extractions?.[0];
+  
+  // Check if this is a guest form
+  const isGuestForm = document.documentType === 'guest-form' || document.documentType === 'guest_form';
+  const hasGuestData = document.guestExtractions && document.guestExtractions.length > 0;
+  const isProcessing = document.status === 'processing';
+  const hasFailed = document.status === 'failed';
 
-  const handleEditToggle = () => {
-    setIsEditing(!isEditing);
-    if (!isEditing) {
-      setFormData(extraction?.extractionData || {});
-    }
-  };
-
-  const handleCancel = () => {
-    setIsEditing(false);
-    setFormData(extraction?.extractionData || {});
-  };
-
-  const handleSave = async () => {
-    setIsLoading(true);
-    try {
-      const response = await fetch('/api/documents/update', {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ 
-          documentId: document.id,
-          extractionData: formData 
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to save changes');
-      }
-
-      setIsEditing(false);
-      router.refresh();
-      toast.success('Changes saved successfully!');
-    } catch (error) {
-      console.error('Error saving changes:', error);
-      toast.error('Failed to save changes. Please try again.');
-    } finally {
-      setIsLoading(false);
-    }
+  const handleDataUpdate = (updatedData: any) => {
+    // Refresh the page to show updated data
+    router.refresh();
   };
 
   const handleDelete = async () => {
@@ -119,7 +72,11 @@ export function DocumentResults({ document, extraction, hasErrors }: DocumentRes
       documentType: document.documentType,
       processedAt: extraction?.createdAt,
       confidenceScore: extraction?.confidenceScore,
-      extractedData: formData,
+      extractedData: extraction?.extractionData,
+      guestData: document.guestExtractions?.map(ge => ({
+        guestIndex: ge.guestIndex,
+        data: ge.extractedData,
+      })),
     };
 
     const blob = new Blob([JSON.stringify(dataToExport, null, 2)], {
@@ -137,24 +94,6 @@ export function DocumentResults({ document, extraction, hasErrors }: DocumentRes
     toast.success('Data exported successfully!');
   };
 
-  const handleFieldChange = (field: string, value: string) => {
-    setFormData((prev: any) => ({
-      ...prev,
-      [field]: value,
-    }));
-  };
-
-  const formatFieldLabel = (field: string) => {
-    return field
-      .replace(/([A-Z])/g, ' $1')
-      .replace(/^./, str => str.toUpperCase())
-      .trim();
-  };
-
-  const isFieldForReview = (field: string) => {
-    return Array.isArray(extraction?.fieldsForReview) && 
-           extraction.fieldsForReview.includes(field);
-  };
 
   return (
     <div className="space-y-6">
@@ -171,7 +110,7 @@ export function DocumentResults({ document, extraction, hasErrors }: DocumentRes
         
         <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
           <Button onClick={handleExport} variant="outline" className="w-full sm:w-auto">
-            Export JSON
+            Export {isGuestForm ? 'CSV' : 'JSON'}
           </Button>
           
           <AlertDialog>
@@ -207,6 +146,42 @@ export function DocumentResults({ document, extraction, hasErrors }: DocumentRes
         modelName={extraction?.modelName}
       />
 
+      {/* Guest Form Information */}
+      {isGuestForm && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Guest Form Information</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <div className="text-sm font-medium text-gray-700">Template</div>
+                <div className="text-sm text-gray-900">
+                  {document.formTemplate?.name || 'Unknown Template'}
+                </div>
+              </div>
+              
+              <div>
+                <div className="text-sm font-medium text-gray-700">Guests Found</div>
+                <div className="text-sm text-gray-900">
+                  {document.guestExtractions?.length || 0} guest{(document.guestExtractions?.length || 0) !== 1 ? 's' : ''}
+                  {document.guestCount && ` (expected ${document.guestCount})`}
+                </div>
+              </div>
+              
+              <div>
+                <div className="text-sm font-medium text-gray-700">Processing Status</div>
+                <div className="flex items-center gap-2">
+                  <Badge variant={document.status === 'completed' ? 'default' : 'secondary'}>
+                    {document.status}
+                  </Badge>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Images */}
       {document.files.length > 0 && (
         <Card>
@@ -228,97 +203,54 @@ export function DocumentResults({ document, extraction, hasErrors }: DocumentRes
         </Card>
       )}
 
-      {/* Extracted Data */}
-      {extraction ? (
+      {/* Processing States for Guest Forms */}
+      {isGuestForm && isProcessing && (
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
-            <div>
-              <CardTitle>Extracted Information</CardTitle>
-              <CardDescription>
-                Data extracted and processed by AI models
-              </CardDescription>
+          <CardContent className="text-center py-12">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <div className="text-lg font-medium text-gray-900 mb-2">
+              Processing your guest form...
             </div>
-            
-            <div className="flex flex-col sm:flex-row gap-2">
-              {isEditing ? (
-                <>
-                  <Button 
-                    onClick={handleCancel} 
-                    variant="outline" 
-                    disabled={isLoading}
-                    className="w-full sm:w-auto"
-                  >
-                    Cancel
-                  </Button>
-                  <Button 
-                    onClick={handleSave} 
-                    disabled={isLoading}
-                    className="w-full sm:w-auto"
-                  >
-                    {isLoading ? <LoadingSpinner size="sm" /> : 'Save Changes'}
-                  </Button>
-                </>
-              ) : (
-                <Button onClick={handleEditToggle} className="w-full sm:w-auto">
-                  Edit
-                </Button>
-              )}
-            </div>
-          </CardHeader>
-          
-          <CardContent>
-            {Array.isArray(extraction.fieldsForReview) && extraction.fieldsForReview.length > 0 && (
-              <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-                <div className="flex items-center space-x-2 mb-2">
-                  <span className="text-yellow-600">⚠️</span>
-                  <span className="font-medium text-yellow-800">Fields Requiring Review</span>
-                </div>
-                <p className="text-sm text-yellow-700">
-                  The following fields had conflicting values from different AI models. 
-                  Please review them carefully: {extraction.fieldsForReview.join(', ')}
-                </p>
-              </div>
-            )}
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {Object.entries(formData).map(([field, value]) => (
-                <div key={field} className="space-y-2">
-                  <Label htmlFor={field} className="flex items-center space-x-2">
-                    <span>{formatFieldLabel(field)}</span>
-                    {isFieldForReview(field) && (
-                      <Badge variant="destructive" className="text-xs">
-                        Review
-                      </Badge>
-                    )}
-                  </Label>
-                  
-                  {isEditing ? (
-                    <Input
-                      id={field}
-                      value={value?.toString() || ''}
-                      onChange={(e) => handleFieldChange(field, e.target.value)}
-                      className={isFieldForReview(field) ? 'border-yellow-400' : ''}
-                    />
-                  ) : (
-                    <div className={`p-3 bg-gray-50 rounded-md min-h-[40px] flex items-center ${
-                      isFieldForReview(field) ? 'bg-yellow-50 border border-yellow-200' : ''
-                    }`}>
-                      {value?.toString() || <span className="text-gray-400">No data</span>}
-                    </div>
-                  )}
-                </div>
-              ))}
+            <div className="text-gray-600">
+              AI is extracting guest information from your form. This may take a few moments.
             </div>
           </CardContent>
         </Card>
-      ) : (
+      )}
+
+      {isGuestForm && hasFailed && (
         <Card>
-          <CardContent className="text-center py-8">
-            <p className="text-gray-600">
-              {document.status === 'processing' 
-                ? 'Document is still being processed...' 
-                : 'No extraction data available'}
-            </p>
+          <CardContent className="text-center py-12">
+            <div className="bg-red-50 border border-red-200 rounded-lg p-6">
+              <div className="text-red-600 mb-2">
+                <FileText className="h-12 w-12 mx-auto mb-4" />
+              </div>
+              <div className="text-lg font-medium text-red-900 mb-2">
+                Processing Failed
+              </div>
+              <div className="text-red-700">
+                We encountered an error while processing your guest form. Please try uploading it again.
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Document Data Table */}
+      {(!isGuestForm || (isGuestForm && hasGuestData && !isProcessing && !hasFailed)) && (
+        <EditableDataTable 
+          document={document}
+          onDataUpdate={handleDataUpdate}
+        />
+      )}
+
+      {/* Empty state for guest forms */}
+      {isGuestForm && !hasGuestData && !isProcessing && !hasFailed && (
+        <Card>
+          <CardContent className="text-center py-12">
+            <div className="text-gray-500">
+              No guest data extracted from this form yet.
+            </div>
           </CardContent>
         </Card>
       )}
